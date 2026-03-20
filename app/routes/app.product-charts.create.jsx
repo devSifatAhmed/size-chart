@@ -2,21 +2,69 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import defaultTable from "../assets/defaultTable.json";
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
 } from '@dnd-kit/core';
 import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-  useSortable
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+
+function SortableColumnItem({
+    column,
+    rowId,
+    handleInput,
+    handleHide,
+    handleDelete,
+    handleDuplicate
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: column.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style}>
+            {/* column start */}
+            <s-stack>
+                <div style={{ position: "relative", display: "flex", border: "1px solid #d8d8d8", borderRadius: "5px", overflow: "hidden" }}>
+                    <input data-id={column.id} data-row-id={rowId} onInput={handleInput} defaultValue={column?.content} type="text" style={{ width: "100%", padding: "0 10px", outline: "none", border: "none" }} />
+                    <div style={{ display: "flex", justifyContent: "flex-end", borderLeft: "1px solid #d8d8d8" }}>
+                        <s-clickable onClick={() => handleHide(column.id, rowId)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="hide" /></div></div>
+                        </s-clickable>
+                        <s-clickable onClick={() => handleDelete(column.id, rowId)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="delete" /></div></div>
+                        </s-clickable>
+                        <s-clickable onClick={() => handleDuplicate(column.id, rowId)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="duplicate" /></div></div>
+                        </s-clickable>
+                        <s-clickable background="strong" {...attributes} {...listeners}>
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px", cursor: "grab" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="drag-handle" /></div></div>
+                        </s-clickable>
+                    </div>
+                </div>
+            </s-stack>
+            {/* column end */}
+        </div>
+    );
+}
 
 function SortableRowItem({
     row,
@@ -29,7 +77,9 @@ function SortableRowItem({
     handleHide,
     handleDelete,
     handleDuplicate,
-    handleAddColumn
+    handleAddColumn,
+    sensors,
+    handleColumnReorder
 }) {
     const {
         attributes,
@@ -80,28 +130,33 @@ function SortableRowItem({
 
                         <div style={{ width: "calc(100% - 30px)", marginLeft: "30px", display: "grid", gap: "10px", padding: "10px 0" }}>
                             {row?.columns?.length > 0 && (
-                                row?.columns?.map((column, index) => (
-                                    <div key={column.id}>
-                                        {/* column start */}
-                                        <s-stack>
-                                            <div style={{ position: "relative", display: "flex", border: "1px solid #d8d8d8", borderRadius: "5px", overflow: "hidden" }}>
-                                                <input data-id={column.id} data-row-id={row.id} onInput={handleInput} defaultValue={column?.content} type="text" style={{ width: "100%", padding: "0 10px", outline: "none", border: "none" }} />
-                                                <div style={{ display: "flex", justifyContent: "flex-end", borderLeft: "1px solid #d8d8d8" }}>
-                                                    <s-clickable onClick={() => handleHide(column.id, row.id)} background="strong">
-                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="hide" /></div></div>
-                                                    </s-clickable>
-                                                    <s-clickable onClick={() => handleDelete(column.id, row.id)} background="strong">
-                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="delete" /></div></div>
-                                                    </s-clickable>
-                                                    <s-clickable onClick={() => handleDuplicate(column.id, row.id)} background="strong">
-                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="duplicate" /></div></div>
-                                                    </s-clickable>
-                                                </div>
-                                            </div>
-                                        </s-stack>
-                                        {/* column end */}
-                                    </div>
-                                ))
+                                <DndContext
+                                    sensors={sensors}
+                                    collisionDetection={closestCenter}
+                                    onDragEnd={(e) => {
+                                        const { active, over } = e;
+                                        if (active && over && active.id !== over.id) {
+                                            handleColumnReorder(row.id, active.id, over.id);
+                                        }
+                                    }}
+                                >
+                                    <SortableContext
+                                        items={row.columns.map(c => c.id)}
+                                        strategy={verticalListSortingStrategy}
+                                    >
+                                        {row.columns.map((column, index) => (
+                                            <SortableColumnItem
+                                                key={column.id}
+                                                column={column}
+                                                rowId={row.id}
+                                                handleInput={handleInput}
+                                                handleHide={handleHide}
+                                                handleDelete={handleDelete}
+                                                handleDuplicate={handleDuplicate}
+                                            />
+                                        ))}
+                                    </SortableContext>
+                                </DndContext>
                             )}
                             {/* column add button start */}
                             <s-stack>
@@ -323,8 +378,8 @@ export default function CreateChart() {
     );
 
     const handleDragEnd = (event) => {
-        const {active, over} = event;
-        
+        const { active, over } = event;
+
         if (active && over && active.id !== over.id) {
             setTable((prev) => {
                 const newTable = JSON.parse(JSON.stringify(prev));
@@ -335,6 +390,20 @@ export default function CreateChart() {
                 return newTable;
             });
         }
+    }
+
+    const handleColumnReorder = (rowId, activeId, overId) => {
+        setTable((prev) => {
+            const newTable = JSON.parse(JSON.stringify(prev));
+            const rowIndex = newTable.rows.findIndex(r => r.id === rowId);
+            if (rowIndex > -1) {
+                const oldIndex = newTable.rows[rowIndex].columns.findIndex(c => c.id === activeId);
+                const newIndex = newTable.rows[rowIndex].columns.findIndex(c => c.id === overId);
+                newTable.rows[rowIndex].columns = arrayMove(newTable.rows[rowIndex].columns, oldIndex, newIndex);
+            }
+            setTimeout(() => changedForm(), 0);
+            return newTable;
+        });
     }
 
     const [headerOpen, setHeaderOpen] = useState(false);
@@ -547,12 +616,12 @@ export default function CreateChart() {
                                             {/* design body start */}
                                             <s-stack padding="small base" gap="small">
                                                 {/* i've installed the dnd-kit. now I need to implement the sortable for the rows. implement it */}
-                                                <DndContext 
+                                                <DndContext
                                                     sensors={sensors}
                                                     collisionDetection={closestCenter}
                                                     onDragEnd={handleDragEnd}
                                                 >
-                                                    <SortableContext 
+                                                    <SortableContext
                                                         items={table?.rows?.map(r => r.id) || []}
                                                         strategy={verticalListSortingStrategy}
                                                     >
@@ -571,6 +640,8 @@ export default function CreateChart() {
                                                                     handleDelete={handleDelete}
                                                                     handleDuplicate={handleDuplicate}
                                                                     handleAddColumn={handleAddColumn}
+                                                                    sensors={sensors}
+                                                                    handleColumnReorder={handleColumnReorder}
                                                                 />
                                                             ))
                                                         )}
