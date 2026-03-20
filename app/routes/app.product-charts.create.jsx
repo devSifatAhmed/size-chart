@@ -1,6 +1,128 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import defaultTable from "../assets/defaultTable.json";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableRowItem({
+    row,
+    rowCollapse,
+    setRowCollapse,
+    handleRowHide,
+    handleRowDelete,
+    handleRowDuplicate,
+    handleInput,
+    handleHide,
+    handleDelete,
+    handleDuplicate,
+    handleAddColumn
+}) {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+    } = useSortable({ id: row.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+    };
+
+    return (
+        <div ref={setNodeRef} style={style}>
+            <s-stack>
+                <div style={{ display: "grid", gridTemplateColumns: "30px 1fr 120px", background: "#F3F3F3", borderRadius: "7px", overflow: "hidden" }}>
+                    <div>
+                        <s-clickable onClick={() => setRowCollapse({ ...rowCollapse, [row.id]: !rowCollapse[row.id] })} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}>
+                                <s-icon type={rowCollapse[row.id] ? "chevron-right" : "chevron-down"} />
+                            </div>
+                        </s-clickable>
+                    </div>
+                    <div style={{ display: "flex", height: "40px", alignItems: "center", paddingLeft: "4px" }}>
+                        <s-text>Row</s-text>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <s-clickable onClick={() => handleRowHide(row.id)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="hide" /></div>
+                        </s-clickable>
+                        <s-clickable onClick={() => handleRowDelete(row.id)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="delete" /></div>
+                        </s-clickable>
+                        <s-clickable onClick={() => handleRowDuplicate(row.id)} background="strong">
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="duplicate" /></div>
+                        </s-clickable>
+                        <s-clickable background="strong" {...attributes} {...listeners}>
+                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px", cursor: "grab" }}><s-icon type="drag-handle" /></div>
+                        </s-clickable>
+                    </div>
+                </div>
+                {/* columns start */}
+                {!rowCollapse[row.id] && (
+                    <div style={{ position: "relative" }}>
+                        <div style={{ position: "absolute", top: "5px", left: "15px", height: "calc(100% - 10px)", borderLeft: "0.04125rem dashed #d8d8d8" }}></div>
+
+                        <div style={{ width: "calc(100% - 30px)", marginLeft: "30px", display: "grid", gap: "10px", padding: "10px 0" }}>
+                            {row?.columns?.length > 0 && (
+                                row?.columns?.map((column, index) => (
+                                    <div key={column.id}>
+                                        {/* column start */}
+                                        <s-stack>
+                                            <div style={{ position: "relative", display: "flex", border: "1px solid #d8d8d8", borderRadius: "5px", overflow: "hidden" }}>
+                                                <input data-id={column.id} data-row-id={row.id} onInput={handleInput} defaultValue={column?.content} type="text" style={{ width: "100%", padding: "0 10px", outline: "none", border: "none" }} />
+                                                <div style={{ display: "flex", justifyContent: "flex-end", borderLeft: "1px solid #d8d8d8" }}>
+                                                    <s-clickable onClick={() => handleHide(column.id, row.id)} background="strong">
+                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="hide" /></div></div>
+                                                    </s-clickable>
+                                                    <s-clickable onClick={() => handleDelete(column.id, row.id)} background="strong">
+                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="delete" /></div></div>
+                                                    </s-clickable>
+                                                    <s-clickable onClick={() => handleDuplicate(column.id, row.id)} background="strong">
+                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="duplicate" /></div></div>
+                                                    </s-clickable>
+                                                </div>
+                                            </div>
+                                        </s-stack>
+                                        {/* column end */}
+                                    </div>
+                                ))
+                            )}
+                            {/* column add button start */}
+                            <s-stack>
+                                <div className="custom__adding_button" style={{ position: "relative", zIndex: 2 }}>
+                                    <div onClick={() => handleAddColumn(row.id)} className="custom__adding_button__line" style={{ position: "absolute", cursor: "pointer", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: -1, height: "2px", width: "100%" }}></div>
+                                    <div onClick={() => handleAddColumn(row.id)} className="custom__adding_button__text" style={{ color: "#0094D5", display: "flex", cursor: "pointer", width: "fit-content", padding: "0 10px 0 7px", flexWrap: "nowrap", alignItems: "center", margin: "0 auto", zIndex: 2, background: "#fff" }}>
+                                        <s-icon tone="info" type="plus-circle" />
+                                        Add Column
+                                    </div>
+                                </div>
+                            </s-stack>
+                            {/* column add button end */}
+                        </div>
+                    </div>
+                )}
+                {/* columns end */}
+            </s-stack>
+        </div>
+    );
+}
+
 export default function CreateChart() {
     const navigate = useNavigate();
     const [table, setTable] = useState(defaultTable);
@@ -187,6 +309,34 @@ export default function CreateChart() {
         input.dispatchEvent(new Event("input", { bubbles: true }));
         console.log(input);
     }
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                delay: 100,
+                tolerance: 5,
+            }
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
+
+    const handleDragEnd = (event) => {
+        const {active, over} = event;
+        
+        if (active && over && active.id !== over.id) {
+            setTable((prev) => {
+                const newTable = JSON.parse(JSON.stringify(prev));
+                const oldIndex = newTable.rows.findIndex(row => row.id === active.id);
+                const newIndex = newTable.rows.findIndex(row => row.id === over.id);
+                newTable.rows = arrayMove(newTable.rows, oldIndex, newIndex);
+                setTimeout(() => changedForm(), 0);
+                return newTable;
+            });
+        }
+    }
+
     const [headerOpen, setHeaderOpen] = useState(false);
     const [headerCollapse, setHeaderCollapse] = useState(false);
     const Column = () => {
@@ -397,84 +547,35 @@ export default function CreateChart() {
                                             {/* design body start */}
                                             <s-stack padding="small base" gap="small">
                                                 {/* i've installed the dnd-kit. now I need to implement the sortable for the rows. implement it */}
-                                                {table?.rows?.length > 0 && (
-                                                    table?.rows?.map((row, index) => (
-                                                        <>
-                                                            {/* row start */}
-                                                            <s-stack key={row?.id}>
-                                                                <div style={{ display: "grid", gridTemplateColumns: "30px 1fr 90px", background: "#F3F3F3", borderRadius: "7px", overflow: "hidden" }}>
-                                                                    <div>
-                                                                        <s-clickable onClick={() => setRowCollapse({ ...rowCollapse, [row.id]: !rowCollapse[row.id] })} background="strong">
-                                                                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}>
-                                                                                <s-icon type={rowCollapse[row.id] ? "chevron-right" : "chevron-down"} />
-                                                                            </div>
-                                                                        </s-clickable>
-                                                                    </div>
-                                                                    <div style={{ display: "flex", height: "40px", alignItems: "center", paddingLeft: "4px" }}>
-                                                                        <s-text>Row</s-text>
-                                                                    </div>
-                                                                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                                                        <s-clickable onClick={() => handleRowHide(row.id)} background="strong">
-                                                                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="hide" /></div>
-                                                                        </s-clickable>
-                                                                        <s-clickable onClick={() => handleRowDelete(row.id)} background="strong">
-                                                                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="delete" /></div>
-                                                                        </s-clickable>
-                                                                        <s-clickable onClick={() => handleRowDuplicate(row.id)} background="strong">
-                                                                            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "40px", width: "30px" }}><s-icon type="duplicate" /></div>
-                                                                        </s-clickable>
-                                                                    </div>
-                                                                </div>
-                                                                {/* columns start */}
-                                                                {!rowCollapse[row.id] && (
-                                                                    <div style={{ position: "relative" }}>
-                                                                        <div style={{ position: "absolute", top: "5px", left: "15px", height: "calc(100% - 10px)", borderLeft: "0.04125rem dashed #d8d8d8" }}></div>
-
-                                                                        <div style={{ width: "calc(100% - 30px)", marginLeft: "30px", display: "grid", gap: "10px", padding: "10px 0" }}>
-                                                                            {row?.columns?.length > 0 && (
-                                                                                row?.columns?.map((column, index) => (
-                                                                                    <>
-                                                                                        {/* column start */}
-                                                                                        <s-stack>
-                                                                                            <div key={column.id} style={{ position: "relative", display: "flex", border: "1px solid #d8d8d8", borderRadius: "5px", overflow: "hidden" }}>
-                                                                                                <input data-id={column.id} data-row-id={row.id} onInput={handleInput} defaultValue={column?.content} type="text" style={{ width: "100%", padding: "0 10px", outline: "none", border: "none" }} />
-                                                                                                <div style={{ display: "flex", justifyContent: "flex-end", borderLeft: "1px solid #d8d8d8" }}>
-                                                                                                    <s-clickable onClick={() => handleHide(column.id, row.id)} background="strong">
-                                                                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="hide" /></div></div>
-                                                                                                    </s-clickable>
-                                                                                                    <s-clickable onClick={() => handleDelete(column.id, row.id)} background="strong">
-                                                                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="delete" /></div></div>
-                                                                                                    </s-clickable>
-                                                                                                    <s-clickable onClick={() => handleDuplicate(column.id, row.id)} background="strong">
-                                                                                                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "30px", width: "25px" }}><div style={{ transform: "scale(0.8)" }}><s-icon type="duplicate" /></div></div>
-                                                                                                    </s-clickable>
-                                                                                                </div>
-                                                                                            </div>
-                                                                                        </s-stack>
-                                                                                        {/* column end */}
-                                                                                    </>
-                                                                                ))
-                                                                            )}
-                                                                            {/* column add button start */}
-                                                                            <s-stack>
-                                                                                <div className="custom__adding_button" style={{ position: "relative", zIndex: 2 }}>
-                                                                                    <div onClick={() => handleAddColumn(row.id)} className="custom__adding_button__line" style={{ position: "absolute", cursor: "pointer", top: "50%", left: "50%", transform: "translate(-50%, -50%)", zIndex: -1, height: "2px", width: "100%" }}></div>
-                                                                                    <div onClick={() => handleAddColumn(row.id)} className="custom__adding_button__text" style={{ color: "#0094D5", display: "flex", cursor: "pointer", width: "fit-content", padding: "0 10px 0 7px", flexWrap: "nowrap", alignItems: "center", margin: "0 auto", zIndex: 2, background: "#fff" }}>
-                                                                                        <s-icon tone="info" type="plus-circle" />
-                                                                                        Add Column
-                                                                                    </div>
-                                                                                </div>
-                                                                            </s-stack>
-                                                                            {/* column add button end */}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                                {/* columns end */}
-                                                            </s-stack>
-                                                            {/* row end */}
-                                                        </>
-                                                    ))
-                                                )}
+                                                <DndContext 
+                                                    sensors={sensors}
+                                                    collisionDetection={closestCenter}
+                                                    onDragEnd={handleDragEnd}
+                                                >
+                                                    <SortableContext 
+                                                        items={table?.rows?.map(r => r.id) || []}
+                                                        strategy={verticalListSortingStrategy}
+                                                    >
+                                                        {table?.rows?.length > 0 && (
+                                                            table?.rows?.map((row, index) => (
+                                                                <SortableRowItem
+                                                                    key={row.id}
+                                                                    row={row}
+                                                                    rowCollapse={rowCollapse}
+                                                                    setRowCollapse={setRowCollapse}
+                                                                    handleRowHide={handleRowHide}
+                                                                    handleRowDelete={handleRowDelete}
+                                                                    handleRowDuplicate={handleRowDuplicate}
+                                                                    handleInput={handleInput}
+                                                                    handleHide={handleHide}
+                                                                    handleDelete={handleDelete}
+                                                                    handleDuplicate={handleDuplicate}
+                                                                    handleAddColumn={handleAddColumn}
+                                                                />
+                                                            ))
+                                                        )}
+                                                    </SortableContext>
+                                                </DndContext>
                                                 {/* row add button start */}
                                                 <s-stack>
                                                     <div className="custom__adding_button" style={{ position: "relative", zIndex: 2 }}>
