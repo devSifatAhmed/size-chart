@@ -1,0 +1,137 @@
+{
+    "id": "table_9821347654321",
+    "name": "Product Table",
+    "header": {
+        "columns": [
+            {
+                "id": "header_1",
+                "content": "Make",
+                "hidden": false
+            },
+            {
+                "id": "header_2",
+                "content": "Model",
+                "hidden": false
+            },
+            {
+                "id": "header_3",
+                "content": "Years",
+                "hidden": false
+            }
+        ],
+        "hidden": false
+    },
+    "rows": [
+        {
+            "id": "row_1_9821347654321",
+            "name": "Row 1",
+            "columns": [
+                {
+                    "id": "column_1_1",
+                    "content": "Kia",
+                    "hidden": false
+                },
+                {
+                    "id": "column_1_2",
+                    "content": "Forte",
+                    "hidden": false
+                },
+                {
+                    "id": "column_1_4",
+                    "content": "2014-2017",
+                    "hidden": false
+                }
+            ],
+            "hidden": false
+        },
+        {
+            "id": "row_2_9821347654321",
+            "name": "Row 2",
+            "columns": [
+                {
+                    "id": "column_2_1",
+                    "content": "Kia",
+                    "hidden": false
+                },
+                {
+                    "id": "column_2_2",
+                    "content": "Tucson",
+                    "hidden": false
+                },
+                {
+                    "id": "column_2_3",
+                    "content": "2014-2021",
+                    "hidden": false
+                }
+            ],
+            "hidden": false
+        },
+        {
+            "id": "row_3_9821347654321",
+            "name": "Row 3",
+            "columns": [
+                {
+                    "id": "column_3_1",
+                    "content": "Kia",
+                    "hidden": false
+                },
+                {
+                    "id": "column_3_2",
+                    "content": "Soul",
+                    "hidden": false
+                },
+                {
+                    "id": "column_3_3",
+                    "content": "2014-2017",
+                    "hidden": false
+                }
+            ],
+            "hidden": false
+        },
+        {
+            "id": "row_4_9821347654321",
+            "name": "Row 4",
+            "columns": [
+                {
+                    "id": "column_4_1",
+                    "content": "Kia",
+                    "hidden": false
+                },
+                {
+                    "id": "column_4_2",
+                    "content": "Sportage",
+                    "hidden": false
+                },
+                {
+                    "id": "column_4_3",
+                    "content": "2016-2017",
+                    "hidden": false
+                }
+            ],
+            "hidden": false
+        },
+        {
+            "id": "row_5_9821347654321",
+            "name": "Row 5",
+            "columns": [
+                {
+                    "id": "column_5_1",
+                    "content": "Hyundai",
+                    "hidden": false
+                },
+                {
+                    "id": "column_5_2",
+                    "content": "Elantra GT",
+                    "hidden": false
+                },
+                {
+                    "id": "column_5_3",
+                    "content": "2014-2017",
+                    "hidden": false
+                }
+            ]
+        }
+    ],
+    "assignType": "product",
+    "assignId": "PROD_556677889900"
+}
