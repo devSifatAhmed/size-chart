@@ -209,9 +209,6 @@ export default function CreateChart() {
                 e.preventDefault();
                 console.clear();
                 console.log("reset");
-
-                // const hideEvent = new Event("hide");
-                // appWindow.dispatchEvent(hideEvent);
             })
         }
         appWindow.addEventListener("hide", function () {
@@ -477,6 +474,29 @@ export default function CreateChart() {
         });
         changedForm();
     }
+
+    const handleSelectProducts = async () => {
+        const selected = await shopify.resourcePicker({
+            type: 'product',
+            multiple: true,
+            selectionIds: [
+                ...table.assignId.map((id) => {
+                    return {
+                        id: id
+                    }
+                })
+            ],
+        });
+        if (selected) {
+            setTable((prev) => {
+                const newTable = JSON.parse(JSON.stringify(prev));
+                newTable.assignId = selected.map((product) => product.id);
+                return newTable;
+            });
+            changedForm();
+        }
+    };
+
     return (
         <>
             <s-app-window id="app-window" src="/app/product-charts/create"></s-app-window>
@@ -663,25 +683,25 @@ export default function CreateChart() {
                                                 {/* row add button end */}
                                                 <style>
                                                     {`
-    .custom__adding_button .custom__adding_button__line {
-        background: #d8d8d8 !important;
-    }
-    .custom__adding_button .custom__adding_button__line::after {
-        position: absolute;
-        content: "";
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: #0094D5 !important;
-        transition: 0.2s ease-in-out;
-        transform: scaleX(0);
-        transform-origin: center;
-    }
-    .custom__adding_button:hover .custom__adding_button__line::after {
-        transform: scaleX(1);
-    }
-`}
+                                                        .custom__adding_button .custom__adding_button__line {
+                                                            background: #d8d8d8 !important;
+                                                        }
+                                                        .custom__adding_button .custom__adding_button__line::after {
+                                                            position: absolute;
+                                                            content: "";
+                                                            top: 0;
+                                                            left: 0;
+                                                            width: 100%;
+                                                            height: 100%;
+                                                            background: #0094D5 !important;
+                                                            transition: 0.2s ease-in-out;
+                                                            transform: scaleX(0);
+                                                            transform-origin: center;
+                                                        }
+                                                        .custom__adding_button:hover .custom__adding_button__line::after {
+                                                            transform: scaleX(1);
+                                                        }
+                                                    `}
                                                 </style>
                                             </s-stack>
                                             {/* design body end */}
@@ -697,14 +717,17 @@ export default function CreateChart() {
                                     <s-stack padding="small base" gap="base">
                                         <s-select label="Choose chart type">
                                             <s-option value="product" selected>Product</s-option>
-                                            <s-option value="collection">Collection</s-option>
-                                            <s-option value="global">Global</s-option>
+                                            <s-option value="collection" disabled>Collection</s-option>
+                                            <s-option value="global" disabled>Global</s-option>
                                         </s-select>
-                                        <s-clickable background="strong" borderRadius="base" border="base">
+                                        <s-clickable onClick={handleSelectProducts} background="strong" borderRadius="base" border="base">
                                             <div style={{ padding: "10px", textAlign: "center" }}>
-                                                Select products
+                                                {table?.assignId?.length > 0 ? "Update products" : "Select products"}
                                             </div>
                                         </s-clickable>
+                                        {table?.assignId?.length > 0 && (
+                                            <s-paragraph>Selected products: {table?.assignId?.length}</s-paragraph>
+                                        )}
                                     </s-stack>
                                 </div>
                             )}

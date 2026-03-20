@@ -22,6 +22,50 @@ const shopify = shopifyApp({
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
+  hooks: {
+    afterAuth: async ({ session }) => {
+      shopify.registerWebhooks({ session });
+
+      if (session) {
+        await prisma.stores.upsert({
+          where: { id: session.id },
+          update: {
+            shop: session.shop,
+            state: session.state,
+            isOnline: session.isOnline,
+            scope: session.scope,
+            expires: session.expires,
+            accessToken: session.accessToken,
+            userId: session.userId ? BigInt(session.userId) : null,
+            firstName: session.firstName,
+            lastName: session.lastName,
+            email: session.email,
+            accountOwner: session.accountOwner || false,
+            locale: session.locale,
+            collaborator: session.collaborator || false,
+            emailVerified: session.emailVerified || false,
+          },
+          create: {
+            id: session.id,
+            shop: session.shop,
+            state: session.state,
+            isOnline: session.isOnline,
+            scope: session.scope,
+            expires: session.expires,
+            accessToken: session.accessToken,
+            userId: session.userId ? BigInt(session.userId) : null,
+            firstName: session.firstName,
+            lastName: session.lastName,
+            email: session.email,
+            accountOwner: session.accountOwner || false,
+            locale: session.locale,
+            collaborator: session.collaborator || false,
+            emailVerified: session.emailVerified || false,
+          },
+        });
+      }
+    },
+  },
 });
 
 export default shopify;
