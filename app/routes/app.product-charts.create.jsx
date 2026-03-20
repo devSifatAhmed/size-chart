@@ -17,6 +17,7 @@ import {
     useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { restrictToVerticalAxis, restrictToParentElement } from '@dnd-kit/modifiers';
 
 function SortableColumnItem({
     column,
@@ -139,6 +140,7 @@ function SortableRowItem({
                                             handleColumnReorder(row.id, active.id, over.id);
                                         }
                                     }}
+                                    modifiers={[restrictToVerticalAxis, restrictToParentElement]}
                                 >
                                     <SortableContext
                                         items={row.columns.map(c => c.id)}
@@ -620,6 +622,7 @@ export default function CreateChart() {
                                                     sensors={sensors}
                                                     collisionDetection={closestCenter}
                                                     onDragEnd={handleDragEnd}
+                                                    modifiers={[restrictToVerticalAxis]}
                                                 >
                                                     <SortableContext
                                                         items={table?.rows?.map(r => r.id) || []}
