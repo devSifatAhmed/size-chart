@@ -34,11 +34,14 @@ model Session {
 }
 
 model Chart {
-  id         String @id @default(uuid())
-  shop       String
-  title      String
-  tableData  String
-  assignType String
+  id           String @id @default(uuid())
+  shop         String
+  name         String @default("Product Table")
+  title        String
+  tableData    String
+  assignType   String
+  rowCount     Boolean @default(true)
+  rowCountText String @default("Vehicles")
 
   assignments ChartAssignment[]
 

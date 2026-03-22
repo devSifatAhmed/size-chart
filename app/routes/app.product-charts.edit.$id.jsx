@@ -2,7 +2,31 @@ import { useEffect, useState } from "react";
 import { Form, useNavigate, redirect, useActionData, useSubmit, useLoaderData } from "react-router";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-import defaultTable from "../assets/defaultTable.json";
+
+export async function loader({ request, params }) {
+    const { id } = params;
+    const { admin } = await authenticate.admin(request);
+    const response = await admin.graphql(
+        `#graphql
+            query {
+                shop {
+                    name
+                    id
+                }
+            }`,
+    );
+    const shopData = await response.json();
+    const chart = await prisma.chart.findUnique({
+        where: {
+            id,
+            shop: shopData.data.shop.id,
+        },
+    });
+    if (!chart) {
+        return redirect("/app/product-charts");
+    }
+    return { chart, id };
+}
 
 export async function action({ request }) {
     const { admin } = await authenticate.admin(request);
@@ -28,7 +52,10 @@ export async function action({ request }) {
     }
 
     try {
-        const chart = await prisma.chart.create({
+        const chart = await prisma.chart.update({
+            where: {
+                id: payload.id,
+            },
             data: {
                 shop: shopData.data.shop.id,
                 name: payload.name || "Product Table",
@@ -40,16 +67,28 @@ export async function action({ request }) {
             }
         });
 
-        if (payload.assignId && payload.assignId.length > 0) {
-            await prisma.chartAssignment.createMany({
-                data: payload.assignId.map((id) => ({
+        // Handle assignments
+        if (payload.assignId) {
+            // 1. Delete existing assignments
+            await prisma.chartAssignment.deleteMany({
+                where: {
                     chartId: chart.id,
-                    targetId: id
-                }))
+                }
             });
+
+            // 2. Insert new ones (if any)
+            if (payload.assignId.length > 0) {
+                await prisma.chartAssignment.createMany({
+                    data: payload.assignId.map((id) => ({
+                        chartId: chart.id,
+                        targetId: id
+                    }))
+                });
+            }
         }
 
-        return { success: "Chart created successfully" };
+        return { success: "Chart updated successfully" };
+
     } catch (e) {
         console.error("Action error:", e);
         return { error: "Database error: " + e.message };
@@ -234,10 +273,13 @@ function SortableRowItem({
     );
 }
 
-export default function CreateChart() {
+export default function EditChart() {
     const navigate = useNavigate();
     const submit = useSubmit();
-    const [table, setTable] = useState(defaultTable);
+    const { chart, id } = useLoaderData();
+    const chartData = JSON.parse(chart.tableData);
+    chartData.id = id;
+    const [table, setTable] = useState(chartData);
     const actionData = useActionData();
 
     useEffect(() => {
@@ -246,7 +288,6 @@ export default function CreateChart() {
         }
         if (actionData?.success) {
             shopify.toast.show(actionData.success, { isError: false });
-            navigate("/app/product-charts");
         }
     }, [actionData]);
 
@@ -411,7 +452,7 @@ export default function CreateChart() {
         }
     );
 
-    const [unsavedChanges, setUnsavedChanges] = useState(true);
+    const [unsavedChanges, setUnsavedChanges] = useState(false);
     const changedForm = () => {
         setUnsavedChanges(true);
     }
@@ -854,11 +895,15 @@ export default function CreateChart() {
                                 </s-button-group>
                             </div>
                             <div style={{ display: "flex", flexWrap: "nowrap", justifyContent: "flex-end" }}>
-                                {unsavedChanges && (
+                                {unsavedChanges ? (
                                     <s-button-group>
                                         <s-button slot="primary-action" onClick={handleSave}>Save</s-button>
                                         <s-button slot="secondary-actions" onClick={handleDiscard}>Discard</s-button>
                                     </s-button-group>
+                                ) : (
+                                    <s-box paddingInlineEnd="base">
+                                        <s-button onClick={() => navigate("/app/product-charts")} variant="tertiary" icon="x" />
+                                    </s-box>
                                 )}
                             </div>
                         </div>

@@ -1,0 +1,65 @@
+{
+    "id": "6f2f0503-98d4-478f-afb1-bd9c6a29609f",
+    "shop": "gid://shopify/Shop/71397244998",
+    "name": "Product Table",
+    "title": "Product Compatibility Chart",
+    "tableData": {
+        "name": "Product Table",
+        "title": "Product Compatibility Chart",
+        "header": {
+            "columns": [
+                {
+                    "id": "header_1",
+                    "content": "Make",
+                    "hidden": false
+                },
+                {
+                    "id": "header_2",
+                    "content": "Model",
+                    "hidden": false
+                },
+                {
+                    "id": "header_3",
+                    "content": "Years",
+                    "hidden": false
+                }
+            ],
+            "hidden": false
+        },
+        "rows": [
+            {
+                "id": "row_1_9821347654321",
+                "name": "Row 1",
+                "columns": [
+                    {
+                        "id": "column_1_1",
+                        "content": "",
+                        "hidden": false
+                    },
+                    {
+                        "id": "column_1_2",
+                        "content": "",
+                        "hidden": false
+                    },
+                    {
+                        "id": "column_1_4",
+                        "content": "",
+                        "hidden": false
+                    }
+                ],
+                "hidden": false
+            }
+        ],
+        "assignType": "product",
+        "assignId": [
+            "gid://shopify/Product/8245140652102"
+        ],
+        "rowCount": true,
+        "rowCountText": "Vehicles"
+    },
+    "assignType": "product",
+    "rowCount": true,
+    "rowCountText": "Vehicles",
+    "createdAt": "2026-03-22T10:42:48.019Z",
+    "updatedAt": "2026-03-22T10:42:48.019Z"
+}

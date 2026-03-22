@@ -1,6 +1,6 @@
 {
-    "id": "table_9821347654321",
     "name": "Product Table",
+    "title": "Product Compatibility Chart",
     "header": {
         "columns": [
             {
@@ -46,5 +46,7 @@
         }
     ],
     "assignType": "product",
-    "assignId": []
+    "assignId": [],
+    "rowCount": true,
+    "rowCountText": "Vehicles"
 }

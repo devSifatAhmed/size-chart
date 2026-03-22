@@ -1,0 +1,64 @@
+<script>
+  console.clear();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const chart_selector = {{ block.settings.chart_selector | json }};
+    const shopId = {{ shop.id | json }};
+    const productId = {{ product.id | json }};
+
+    function initChart(container) {
+      if (!container) return;
+
+      console.log('Container: ', container);
+
+      fetch(`/apps/compatibility-chart/charts?shopId=${shopId}&productId=${productId}`)
+        .then((response) => response.text())
+        .then((data) => {
+          container.innerHTML = data;
+        })
+        .catch((err) => console.error(err));
+    }
+
+    let container = document.querySelector(chart_selector);
+
+    if (container) {
+      initChart(container);
+    } else {
+      console.log('Container not found, observing DOM...');
+
+      const observer = new MutationObserver((mutations, obs) => {
+        const el = document.querySelector(chart_selector);
+
+        if (el) {
+          console.log('Container found via observer:', el);
+          initChart(el);
+          obs.disconnect();
+        }
+      });
+
+      if (document.body) {
+        observer.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+      } else {
+        console.error('document.body is not available yet');
+      }
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Chart App Empbed",
+  "target": "head",
+  "settings": [
+    {
+      "type": "text",
+      "id": "chart_selector",
+      "label": "Chart selector",
+      "info": "If you've any additional chart selector. You can add here. (e.g. .chart-selector)"
+    }
+  ]
+}
+{% endschema %}
